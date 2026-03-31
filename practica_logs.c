@@ -94,7 +94,44 @@ void liberar_lista(ErrorLog *cabeza)
  */
 void insertar_ordenado(ErrorLog **cabeza, ErrorLog *nuevo)
 {
-    /* ESCRIBE TU CODIGO AQUI */
+
+    ErrorLog *actual = *cabeza;
+    ErrorLog *anterior = NULL;
+
+    char letra_nueva = nuevo->id[0];
+
+    /* Caso: lista vacía */
+    if (*cabeza == NULL) {
+        *cabeza = nuevo;
+        return;
+    }
+
+    while (actual != NULL) {
+        char letra_actual = actual->id[0];
+
+        /* Comparar por letra */
+        if (letra_nueva < letra_actual) {
+            break;
+        }
+
+        /* Misma letra → comparar prioridad (mayor primero) */
+        if (letra_nueva == letra_actual &&
+            nuevo->prioridad > actual->prioridad) {
+            break;
+        }
+
+        anterior = actual;
+        actual = actual->sig;
+    }
+
+    /* Insertar al inicio */
+    if (anterior == NULL) {
+        nuevo->sig = *cabeza;
+        *cabeza = nuevo;
+    } else {
+        nuevo->sig = actual;
+        anterior->sig = nuevo;
+    }
 }
 
 /*
@@ -103,9 +140,18 @@ void insertar_ordenado(ErrorLog **cabeza, ErrorLog *nuevo)
  * Recorre la lista y cuenta los nodos cuyo campo es_critico sea 1.
  */
 int contar_criticos(ErrorLog *cabeza)
-{
-    /* ESCRIBE TU CODIGO AQUI */
-    return 0;
+{   
+    int contador = 0;
+
+    while (cabeza != NULL) {
+        if (cabeza->es_critico == 1) {
+            contador++;
+        }
+        cabeza = cabeza->sig;
+    }
+
+    return contador;
+   
 }
 
 /*
@@ -115,8 +161,16 @@ int contar_criticos(ErrorLog *cabeza)
  */
 int contar_no_criticos(ErrorLog *cabeza)
 {
-    /* ESCRIBE TU CODIGO AQUI */
-    return 0;
+    int contador = 0;
+
+    while (cabeza != NULL) {
+        if (cabeza->es_critico == 0) {
+            contador++;
+        }
+        cabeza = cabeza->sig;
+    }
+
+    return contador;
 }
 
 /*
@@ -129,7 +183,31 @@ int contar_no_criticos(ErrorLog *cabeza)
  */
 ErrorLog *eliminar_por_prioridad(ErrorLog *cabeza, float umbral)
 {
-    /* ESCRIBE TU CODIGO AQUI */
+    ErrorLog *actual = cabeza;
+    ErrorLog *anterior = NULL;
+
+    /* Eliminar nodos al inicio */
+    while (actual != NULL && actual->prioridad < umbral) {
+        ErrorLog *temp = actual;
+        actual = actual->sig;
+        free(temp);
+    }
+
+    cabeza = actual;
+
+    /* Eliminar nodos restantes */
+    while (actual != NULL) {
+        if (actual->prioridad < umbral) {
+            ErrorLog *temp = actual;
+            anterior->sig = actual->sig;
+            actual = actual->sig;
+            free(temp);
+        } else {
+            anterior = actual;
+            actual = actual->sig;
+        }
+    }
+
     return cabeza;
 }
 
@@ -146,7 +224,48 @@ ErrorLog *eliminar_por_prioridad(ErrorLog *cabeza, float umbral)
  */
 ErrorLog *conservar_mayor_no_critico(ErrorLog *cabeza)
 {
-    /* ESCRIBE TU CODIGO AQUI */
+    ErrorLog *actual = cabeza;
+    ErrorLog *max_no_critico = NULL;
+
+    /* Buscar el no crítico con mayor prioridad */
+    while (actual != NULL) {
+        if (actual->es_critico == 0) {
+            if (max_no_critico == NULL ||
+                actual->prioridad > max_no_critico->prioridad) {
+                max_no_critico = actual;
+            }
+        }
+        actual = actual->sig;
+    }
+
+    /* Si no hay no críticos, no hacer nada */
+    if (max_no_critico == NULL) {
+        return cabeza;
+    }
+
+    /* Eliminar los demás no críticos */
+    actual = cabeza;
+    ErrorLog *anterior = NULL;
+
+    while (actual != NULL) {
+        if (actual->es_critico == 0 && actual != max_no_critico) {
+            ErrorLog *temp = actual;
+
+            if (anterior == NULL) {
+                cabeza = actual->sig;
+                actual = cabeza;
+            } else {
+                anterior->sig = actual->sig;
+                actual = actual->sig;
+            }
+
+            free(temp);
+        } else {
+            anterior = actual;
+            actual = actual->sig;
+        }
+    }
+
     return cabeza;
 }
 
